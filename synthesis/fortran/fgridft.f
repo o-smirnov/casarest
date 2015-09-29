@@ -226,6 +226,89 @@ C
       implicit none
       integer nx, ny, npol, nchan, nvispol, nvischan, nrow
       complex values(nvispol, nvischan, nrow)
+      double complex grid(nx, ny, npol, nchan)
+      double precision uvw(3, nrow), freq(nvischan), c, scale(2),
+     $     offset(2)
+      double precision dphase(nrow), uvdist
+      complex phasor
+      integer flag(nvispol, nvischan, nrow)
+      integer rflag(nrow)
+      integer rownum
+      integer support, sampling
+      integer chanmap(*), polmap(*)
+
+      complex nvalue
+
+      double precision convFunc(*)
+      real norm
+
+      logical ogrid
+
+      double precision pos(2)
+      integer loc(2), off(2), iloc(2)
+      integer rbeg, rend
+      integer ix, iy, ipol, ichan
+      integer apol, achan, irow
+      real wt, wtx, wty
+
+      irow=rownum
+
+      if(irow.ge.0) then
+         rbeg=irow+1
+         rend=irow+1
+      else 
+         rbeg=1
+         rend=nrow
+      end if
+
+      do irow=rbeg, rend
+         if(rflag(irow).eq.0) then
+         do ichan=1, nvischan
+            achan=chanmap(ichan)+1
+            if((achan.ge.1).and.(achan.le.nchan)) then
+               call sgrid(uvw(1,irow), dphase(irow), freq(ichan), c,
+     $              scale, offset, sampling, pos, loc, off, phasor)
+               if (ogrid(nx, ny, loc, support)) then
+                  do ipol=1, nvispol
+                     apol=polmap(ipol)+1
+                     if((flag(ipol,ichan,irow).ne.1).and.
+     $                    (apol.ge.1).and.(apol.le.npol)) then
+                        nvalue=0.0
+                        norm=0.0
+                        do iy=-support,support
+                           iloc(2)=abs(sampling*iy+off(2))+1
+                           wty=convFunc(iloc(2))
+                           do ix=-support,support
+                              iloc(1)=abs(sampling*ix+off(1))+1
+                              wtx=convFunc(iloc(1))
+                              wt=wtx*wty
+                              norm=norm+wt
+                              nvalue=nvalue+wt*
+     $                             grid(loc(1)+ix,loc(2)+iy,apol,achan)
+                           end do
+                        end do
+                        values(ipol,ichan,irow)=(nvalue*conjg(phasor))
+     $                       /norm
+                     end if
+                  end do
+               end if
+            end if
+         end do
+         end if
+      end do
+      return
+      end
+C
+C Degrid a number of visibility records -- single prec
+C
+      subroutine dgrids (uvw, dphase, values, nvispol, nvischan,
+     $     flag, rflag,
+     $     nrow, rownum, scale, offset, grid, nx, ny, npol, nchan, freq,
+     $     c, support, sampling, convFunc, chanmap, polmap)
+
+      implicit none
+      integer nx, ny, npol, nchan, nvispol, nvischan, nrow
+      complex values(nvispol, nvischan, nrow)
       complex grid(nx, ny, npol, nchan)
       double precision uvw(3, nrow), freq(nvischan), c, scale(2),
      $     offset(2)

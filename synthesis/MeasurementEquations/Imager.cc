@@ -1845,13 +1845,13 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   return True;
 }
 
-void setSinglePrecision ()
+void Imager::setSinglePrecision ()
 {
   singlePrec_p = true;
   doublePrec_p = false;
 }
 
-void setDoublePrecision ()
+void Imager::setDoublePrecision ()
 {
   singlePrec_p = false;
   doublePrec_p = true;

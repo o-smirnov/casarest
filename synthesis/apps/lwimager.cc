@@ -345,7 +345,6 @@ int main (Int argc, char** argv)
     Bool fpsingle    = inputs.getBool("fpsingle");
     Bool fpdouble    = inputs.getBool("fpdouble");
     Bool fixed       = inputs.getBool("fixed");
-    Bool fixed       = inputs.getBool("fixed");
     Bool useModel    = inputs.getBool("fillmodel");
     Bool constrainFlux  = inputs.getBool("constrainflux");
     Bool preferVelocity = inputs.getBool("prefervelocity");

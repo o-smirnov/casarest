@@ -298,56 +298,110 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
   
 
   
-
-  // If we are memory-based then read the image in and create an
-  // ArrayLattice otherwise just use the PagedImage
-  if(isTiled) {
-    lattice=CountedPtr<Lattice<Complex> >(image, False);
-  }
-  else {
-     IPosition gridShape(4, nx, ny, npol, nchan);
-     griddedData.resize(gridShape);
-     //griddedData can be a reference of image data...if not using model col
-     //hence using an undocumented feature of resize that if 
-     //the size is the same as old data it is not changed.
-     //if(!usePut2_p) griddedData.set(0);
-     griddedData.set(Complex(0.0));
-
-     IPosition stride(4, 1);
-     IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
-     IPosition trc(blc+image->shape()-stride);
-
-     IPosition start(4, 0);
-     griddedData(blc, trc) = image->getSlice(start, image->shape());
-
-     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
-     arrayLattice = new ArrayLattice<Complex>(griddedData);
-     lattice=arrayLattice;
-  }
-
-  //AlwaysAssert(lattice, AipsError);
-
-  logIO() << LogIO::DEBUGGING
-	  << "Starting grid correction and FFT of image" << LogIO::POST;
-
-  // Do the Grid-correction. 
-    {
-      Vector<Complex> correction(nx);
-      correction=Complex(1.0, 0.0);
-      // Do the Grid-correction
-      IPosition cursorShape(4, nx, 1, 1, 1);
-      IPosition axisPath(4, 0, 1, 2, 3);
-      LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
-      LatticeIterator<Complex> lix(*lattice, lsx);
-      for(lix.reset();!lix.atEnd();lix++) {
-        gridder->correctX1D(correction, lix.position()(1));
-        lix.rwVectorCursor()/=correction;
-      }
+  if( useDoubleGrid_p )
+  {
+    // If we are memory-based then read the image in and create an
+    // ArrayLattice otherwise just use the PagedImage
+    if(isTiled) {
+      lattice=CountedPtr<Lattice<Complex> >(image, False);
     }
-  
-    // Now do the FFT2D in place
-    LatticeFFT::cfft2d(*lattice);
+    else {
+       IPosition gridShape(4, nx, ny, npol, nchan);
+       griddedData.resize(gridShape);
+       //griddedData can be a reference of image data...if not using model col
+       //hence using an undocumented feature of resize that if 
+       //the size is the same as old data it is not changed.
+       //if(!usePut2_p) griddedData.set(0);
+       griddedData.set(Complex(0.0));
+
+       IPosition stride(4, 1);
+       IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+       IPosition trc(blc+image->shape()-stride);
+
+       IPosition start(4, 0);
+       griddedData(blc, trc) = image->getSlice(start, image->shape());
+       convertArray(griddedData2,griddedData);
+       //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+       arrayLattice2 = new ArrayLattice<DComplex>(griddedData2);
+       lattice2 = arrayLattice2;
+    }
+
+    //AlwaysAssert(lattice, AipsError);
+
+    logIO() << LogIO::DEBUGGING
+      << "Starting grid correction and FFT of image" << LogIO::POST;
+
+    // Do the Grid-correction. 
+      {
+        Vector<Complex> correction(nx);
+        Vector<DComplex> correction2(nx);
+        correction=Complex(1.0, 0.0);
+        // Do the Grid-correction
+        IPosition cursorShape(4, nx, 1, 1, 1);
+        IPosition axisPath(4, 0, 1, 2, 3);
+        LatticeStepper lsx(lattice2->shape(), cursorShape, axisPath);
+        LatticeIterator<DComplex> lix(*lattice2, lsx);
+        for(lix.reset();!lix.atEnd();lix++) {
+          gridder->correctX1D(correction, lix.position()(1));
+          convertArray(correction2,correction);
+          lix.rwVectorCursor()/=correction2;
+        }
+      }
     
+      // Now do the FFT2D in place
+      LatticeFFT::cfft2d(*lattice2);
+  }
+  else // single-prec
+  {
+    // If we are memory-based then read the image in and create an
+    // ArrayLattice otherwise just use the PagedImage
+    if(isTiled) {
+      lattice=CountedPtr<Lattice<Complex> >(image, False);
+    }
+    else {
+       IPosition gridShape(4, nx, ny, npol, nchan);
+       griddedData.resize(gridShape);
+       //griddedData can be a reference of image data...if not using model col
+       //hence using an undocumented feature of resize that if 
+       //the size is the same as old data it is not changed.
+       //if(!usePut2_p) griddedData.set(0);
+       griddedData.set(Complex(0.0));
+
+       IPosition stride(4, 1);
+       IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+       IPosition trc(blc+image->shape()-stride);
+
+       IPosition start(4, 0);
+       griddedData(blc, trc) = image->getSlice(start, image->shape());
+
+       //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+       arrayLattice = new ArrayLattice<Complex>(griddedData);
+       lattice=arrayLattice;
+    }
+
+    //AlwaysAssert(lattice, AipsError);
+
+    logIO() << LogIO::DEBUGGING
+  	  << "Starting grid correction and FFT of image" << LogIO::POST;
+
+    // Do the Grid-correction. 
+      {
+        Vector<Complex> correction(nx);
+        correction=Complex(1.0, 0.0);
+        // Do the Grid-correction
+        IPosition cursorShape(4, nx, 1, 1, 1);
+        IPosition axisPath(4, 0, 1, 2, 3);
+        LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+        LatticeIterator<Complex> lix(*lattice, lsx);
+        for(lix.reset();!lix.atEnd();lix++) {
+          gridder->correctX1D(correction, lix.position()(1));
+          lix.rwVectorCursor()/=correction;
+        }
+      }
+    
+      // Now do the FFT2D in place
+      LatticeFFT::cfft2d(*lattice);
+  }    
     logIO() << LogIO::DEBUGGING
 	    << "Finished grid correction and FFT of image" << LogIO::POST;
     
@@ -455,6 +509,7 @@ Array<Complex>* GridFT::getDataPointer(const IPosition& centerLoc2D,
 #define ggrid ggrid_
 #define dgrid dgrid_
 #define ggrids ggrids_
+#define dgrids dgrids_
 #endif
 
 extern "C" { 
@@ -512,6 +567,29 @@ extern "C" {
 		Double*);
 
    void dgrid(Double*,
+                Double*,
+    Complex*,
+                Int*,
+                Int*,
+    const Int*,
+    const Int*,
+    Int*,
+    Int*,
+    Double*,
+    Double*,
+    const DComplex*,
+                Int*,
+    Int*,
+    Int *,
+    Int *,
+    const Double*,
+    const Double*,
+                Int*,
+    Int*,
+    Double*,
+    Int*,
+    Int*);
+   void dgrids(Double*,
                 Double*,
 		Complex*,
                 Int*,
@@ -848,31 +926,59 @@ void GridFT::get(VisBuffer& vb, Int row)
     //    IPosition s(data.shape());
     const IPosition &fs=data.shape();
     std::vector<Int> s(fs.begin(), fs.end());
-    
-    dgrid(uvw.getStorage(del),
-	    dphase.getStorage(del),
-	    datStorage,
-	    &s[0],
-	    &s[1],
-	    flags.getStorage(del),
-	    rowFlags.getStorage(del),
-	    &s[2],
-	    &row,
-	    uvScale.getStorage(del),
-	    uvOffset.getStorage(del),
-	    griddedData.getStorage(del),
-	    &nx,
-	    &ny,
-	    &npol,
-	    &nchan,
-	    interpVisFreq_p.getStorage(del),
-	    &C::c,
-	    &(gridder->cSupport()(0)),
-	    &(gridder->cSampling()),
-	    gridder->cFunction().getStorage(del),
-	    chanMap.getStorage(del),
-	    polMap.getStorage(del));
-    
+
+    if( useDoubleGrid_p )
+    {
+      dgrid(uvw.getStorage(del),
+  	    dphase.getStorage(del),
+  	    datStorage,
+  	    &s[0],
+  	    &s[1],
+  	    flags.getStorage(del),
+  	    rowFlags.getStorage(del),
+  	    &s[2],
+  	    &row,
+  	    uvScale.getStorage(del),
+  	    uvOffset.getStorage(del),
+  	    griddedData2.getStorage(del),
+  	    &nx,
+  	    &ny,
+  	    &npol,
+  	    &nchan,
+  	    interpVisFreq_p.getStorage(del),
+  	    &C::c,
+  	    &(gridder->cSupport()(0)),
+  	    &(gridder->cSampling()),
+  	    gridder->cFunction().getStorage(del),
+  	    chanMap.getStorage(del),
+  	    polMap.getStorage(del));
+    }
+    else
+    {
+      dgrids(uvw.getStorage(del),
+        dphase.getStorage(del),
+        datStorage,
+        &s[0],
+        &s[1],
+        flags.getStorage(del),
+        rowFlags.getStorage(del),
+        &s[2],
+        &row,
+        uvScale.getStorage(del),
+        uvOffset.getStorage(del),
+        griddedData.getStorage(del),
+        &nx,
+        &ny,
+        &npol,
+        &nchan,
+        interpVisFreq_p.getStorage(del),
+        &C::c,
+        &(gridder->cSupport()(0)),
+        &(gridder->cSampling()),
+        gridder->cFunction().getStorage(del),
+        chanMap.getStorage(del),
+        polMap.getStorage(del));
+    }  
     data.putStorage(datStorage, isCopy);
   }
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);

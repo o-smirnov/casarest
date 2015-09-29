@@ -249,10 +249,12 @@ protected:
 
   // Array lattice
   CountedPtr<Lattice<Complex> > arrayLattice;
+  CountedPtr<Lattice<DComplex> > arrayLattice2;
 
   // Lattice. For non-tiled gridding, this will point to arrayLattice,
   //  whereas for tiled gridding, this points to the image
   CountedPtr<Lattice<Complex> > lattice;
+  CountedPtr<Lattice<DComplex> > lattice2;
 
   String convType;
 
