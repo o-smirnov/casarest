@@ -300,6 +300,8 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
   
   if( useDoubleGrid_p )
   {
+    logIO() << LogIO::NORMAL
+      << "Reading in image and converting to double precision" << LogIO::POST;
     // If we are memory-based then read the image in and create an
     // ArrayLattice otherwise just use the PagedImage
     if(isTiled) {
@@ -320,7 +322,10 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
 
        IPosition start(4, 0);
        griddedData(blc, trc) = image->getSlice(start, image->shape());
+       griddedData2.resize(gridShape);
+       griddedData2.set(DComplex(0.0));
        convertArray(griddedData2,griddedData);
+       griddedData.resize();
        //if(arrayLattice) delete arrayLattice; arrayLattice=0;
        arrayLattice2 = new ArrayLattice<DComplex>(griddedData2);
        lattice2 = arrayLattice2;
@@ -328,8 +333,8 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
 
     //AlwaysAssert(lattice, AipsError);
 
-    logIO() << LogIO::DEBUGGING
-      << "Starting grid correction and FFT of image" << LogIO::POST;
+    logIO() << LogIO::NORMAL
+      << "Starting grid correction and FFT of image (double precision)" << LogIO::POST;
 
     // Do the Grid-correction. 
       {
@@ -353,6 +358,8 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
   }
   else // single-prec
   {
+    logIO() << LogIO::NORMAL
+      << "Reading in image in single precision" << LogIO::POST;
     // If we are memory-based then read the image in and create an
     // ArrayLattice otherwise just use the PagedImage
     if(isTiled) {
@@ -381,8 +388,8 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
 
     //AlwaysAssert(lattice, AipsError);
 
-    logIO() << LogIO::DEBUGGING
-  	  << "Starting grid correction and FFT of image" << LogIO::POST;
+    logIO() << LogIO::NORMAL
+  	  << "Starting grid correction and FFT of image (single precision)" << LogIO::POST;
 
     // Do the Grid-correction. 
       {
@@ -402,7 +409,7 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
       // Now do the FFT2D in place
       LatticeFFT::cfft2d(*lattice);
   }    
-    logIO() << LogIO::DEBUGGING
+    logIO() << LogIO::NORMAL
 	    << "Finished grid correction and FFT of image" << LogIO::POST;
     
 }
