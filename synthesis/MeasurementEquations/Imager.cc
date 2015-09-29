@@ -322,6 +322,7 @@ traceEvent(1,"Entering imager::defaults",25);
   freqFrame_p=MFrequency::LSRK;
   imageTileVol_p=0;
   singlePrec_p=False;
+  doublePrec_p=False;
   spwchansels_p.resize();
   flatnoise_p=True;
 #ifdef PABLO_IO
@@ -1819,6 +1820,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   freqInterpMethod_p=interpMeth;
   imageTileVol_p=imageTileVol;
   singlePrec_p=singprec;
+  if( singprec )
+    doublePrec_p=false;
 
   if(cache>0) cache_p=cache;
   if(tile>0) tile_p=tile;
@@ -1841,6 +1844,19 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 
   return True;
 }
+
+void setSinglePrecision ()
+{
+  singlePrec_p = true;
+  doublePrec_p = false;
+}
+
+void setDoublePrecision ()
+{
+  singlePrec_p = false;
+  doublePrec_p = true;
+}
+
 
 Bool Imager::setsdoptions(const Float scale, const Float weight, 
 			  const Int convsupport, String pointCol)

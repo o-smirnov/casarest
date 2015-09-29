@@ -285,6 +285,12 @@ int main (Int argc, char** argv)
     inputs.create ("sigma", "0.001Jy",
 		   "deviation for maximum entropy",
 		   "quantity string");
+    inputs.create ("fpsingle", "False",
+           "Always use single floating-point precision in gridding",
+           "bool");
+    inputs.create ("fpdouble", "False",
+           "Always use double floating-point precision in gridding",
+           "bool");
     inputs.create ("fixed", "False",
 		   "Keep clean model fixed",
 		   "bool");
@@ -336,6 +342,9 @@ int main (Int argc, char** argv)
     inputs.readArguments (argc, argv);
 
     // Get the input specification.
+    Bool fpsingle    = inputs.getBool("fpsingle");
+    Bool fpdouble    = inputs.getBool("fpdouble");
+    Bool fixed       = inputs.getBool("fixed");
     Bool fixed       = inputs.getBool("fixed");
     Bool useModel    = inputs.getBool("fillmodel");
     Bool constrainFlux  = inputs.getBool("constrainflux");
@@ -573,6 +582,10 @@ int main (Int argc, char** argv)
                         MPosition(),                  // mLocation
                         padding,                      // padding
                         wplanes);                     // wprojplanes
+      if( fpsingle )
+        imager.setSinglePrecision();
+      if( fpdouble )
+        imager.setDoublePrecision();
       // Do the imaging.
       if (operation == "image" || operation == "psf") {
         imager.makeimage (imageType, imgName);

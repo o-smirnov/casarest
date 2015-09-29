@@ -238,6 +238,11 @@ class Imager
 		  const Int imageTileSizeInPix=0,
 		  const Bool singleprecisiononly=False);
 
+  // forces single precision (default to choose automatically)
+  void setSinglePrecision ();
+  // forces double precision (default to choose automatically)
+  void setDoublePrecision ();
+
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
 		    const Int convsupport=-1, String pointingColToUse="DIRECTION");
@@ -780,6 +785,8 @@ protected:
 
   //Force single precision always
   Bool singlePrec_p;
+  //Force double precision always
+  Bool doublePrec_p;
   //sink used to store history mainly
   LogSink logSink_p;
 

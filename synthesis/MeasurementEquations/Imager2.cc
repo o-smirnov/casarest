@@ -2395,14 +2395,35 @@ Bool Imager::createFTMachine()
   if(gvp_p) {delete gvp_p; gvp_p=0;}
   if(cft_p) {delete cft_p; cft_p=0;}
 
+  LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
+
   //For ftmachines that can use double precision gridders 
   Bool useDoublePrecGrid=False;
-  //few channels use Double precision
-  //till we find a better algorithm to determine when to use Double prec gridding
-  if((imageNchan_p < 5) && !(singlePrec_p))
+  
+  if( singlePrec_p )
+  {
+    os<<"single precision gridding explicitly selected"<<LogIO::POST;
+  }
+  else if( doublePrec_p )
+  {
+    os<<"double precision gridding explicitly selected"<<LogIO::POST;
     useDoublePrecGrid=True;
+  }
+  else
+  {
+      //few channels use Double precision
+    //till we find a better algorithm to determine when to use Double prec gridding
+    if((imageNchan_p < 5))
+    {
+      os<<"double precision gridding automatically chosen (nchan<5)"<<LogIO::POST;
+      useDoublePrecGrid=True;
+    }
+    else
+    {
+      os<<"single precision gridding automatically chosen (nchan>=5)"<<LogIO::POST;
+    }
+  }
 
-  LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
   
   // This next line is only a guess
   Int numberAnt=((MeasurementSet&)*ms_p).antenna().nrow();
